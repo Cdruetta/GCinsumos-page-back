@@ -12,7 +12,6 @@ pnpm-debug.log*
 # ======================================
 prisma/.cache/
 prisma/migrations/**/*.log
-dev.db
 *.db
 *.db-journal
 
