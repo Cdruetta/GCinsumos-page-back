@@ -1,4 +1,5 @@
 const prisma = require('../config/database')
+const { downloadImageFromUrl, deleteImageFile } = require('../utils/imageDownloader')
 
 // Obtener todos los productos con filtros opcionales
 exports.getAllProducts = async (req, res) => {
@@ -62,6 +63,20 @@ exports.createProduct = async (req, res) => {
     try {
         const { name, category, price, stock, description, image } = req.body
 
+        let imagePath = image || '/generic-product-display.png'
+
+        // Si se proporciona una URL de imagen, descargarla y guardarla localmente
+        if (image && (image.startsWith('http://') || image.startsWith('https://'))) {
+            try {
+                imagePath = await downloadImageFromUrl(image, name)
+                console.log(`✅ Imagen descargada y guardada: ${imagePath}`)
+            } catch (downloadError) {
+                console.error('Error al descargar imagen:', downloadError.message)
+                // Si falla la descarga, usar la imagen por defecto o la URL original
+                imagePath = image // Mantener la URL original si falla la descarga
+            }
+        }
+
         const product = await prisma.product.create({
             data: {
                 name,
@@ -69,7 +84,7 @@ exports.createProduct = async (req, res) => {
                 price: parseInt(price),
                 stock: parseInt(stock),
                 description,
-                image: image || '/generic-product-display.png',
+                image: imagePath,
             },
         })
 
@@ -95,6 +110,39 @@ exports.updateProduct = async (req, res) => {
         const { id } = req.params
         const { name, category, price, stock, description, image } = req.body
 
+        // Obtener el producto actual para verificar si tiene una imagen local que eliminar
+        const currentProduct = await prisma.product.findUnique({
+            where: { id: parseInt(id) },
+        })
+
+        if (!currentProduct) {
+            return res.status(404).json({ error: 'Producto no encontrado' })
+        }
+
+        let imagePath = image
+
+        // Si se proporciona una nueva URL de imagen, descargarla y guardarla localmente
+        if (image && (image.startsWith('http://') || image.startsWith('https://'))) {
+            try {
+                imagePath = await downloadImageFromUrl(image, name || currentProduct.name)
+                console.log(`✅ Imagen descargada y guardada: ${imagePath}`)
+                
+                // Eliminar la imagen anterior si existe y es local
+                if (currentProduct.image && currentProduct.image.startsWith('/uploads/images/')) {
+                    await deleteImageFile(currentProduct.image)
+                }
+            } catch (downloadError) {
+                console.error('Error al descargar imagen:', downloadError.message)
+                // Si falla la descarga, mantener la imagen actual o usar la URL
+                imagePath = image
+            }
+        } else if (image && image !== currentProduct.image) {
+            // Si se cambia a una nueva imagen local, eliminar la anterior
+            if (currentProduct.image && currentProduct.image.startsWith('/uploads/images/')) {
+                await deleteImageFile(currentProduct.image)
+            }
+        }
+
         const product = await prisma.product.update({
             where: { id: parseInt(id) },
             data: {
@@ -103,7 +151,7 @@ exports.updateProduct = async (req, res) => {
                 price: parseInt(price),
                 stock: parseInt(stock),
                 description,
-                image,
+                image: imagePath,
             },
         })
 
@@ -121,6 +169,20 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
     try {
         const { id } = req.params
+
+        // Obtener el producto para eliminar su imagen si es local
+        const product = await prisma.product.findUnique({
+            where: { id: parseInt(id) },
+        })
+
+        if (!product) {
+            return res.status(404).json({ error: 'Producto no encontrado' })
+        }
+
+        // Eliminar la imagen del sistema de archivos si es local
+        if (product.image && product.image.startsWith('/uploads/images/')) {
+            await deleteImageFile(product.image)
+        }
 
         await prisma.product.delete({
             where: { id: parseInt(id) },

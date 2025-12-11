@@ -51,13 +51,13 @@ model OrderItem {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  name      String
-  role      String   @default("user") // "admin" o "user"
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  passwordHash String
+  role        String   @default("admin") // "admin", "sudo", "root"
+  active      Boolean  @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  @@index([email])
+  @@index([username])
 }

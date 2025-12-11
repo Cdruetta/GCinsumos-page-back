@@ -52,3 +52,7 @@ logs/
 *.zip
 *.rar
 *.7z
+
+# Uploads (imágenes descargadas)
+uploads/images/*
+!uploads/images/.gitkeep
