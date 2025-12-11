@@ -1,0 +1,55 @@
+# ======================================
+# Node
+# ======================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ======================================
+# Prisma
+# ======================================
+prisma/.cache/
+prisma/migrations/**/*.log
+dev.db
+*.db
+*.db-journal
+
+# ======================================
+# Build
+# ======================================
+dist/
+build/
+
+# ======================================
+# Environment
+# ======================================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ======================================
+# OS / Editor
+# ======================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Logs
+logs/
+*.log
+
+# Temp
+*.tmp
+*.temp
+*.bak
+
+# Zip / binaries
+*.zip
+*.rar
+*.7z
