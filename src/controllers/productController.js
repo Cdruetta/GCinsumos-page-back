@@ -76,7 +76,16 @@ exports.createProduct = async (req, res) => {
         res.status(201).json(product)
     } catch (error) {
         console.error('Error al crear producto:', error)
-        res.status(500).json({ error: 'Error al crear producto' })
+        if (error.code === 'P2002') {
+            return res.status(400).json({ error: 'Ya existe un producto con estos datos' })
+        }
+        if (error.code === 'P2003') {
+            return res.status(400).json({ error: 'Error de referencia en la base de datos' })
+        }
+        res.status(500).json({ 
+            error: 'Error al crear producto',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        })
     }
 }
 

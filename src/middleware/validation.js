@@ -4,8 +4,18 @@ const { body, validationResult } = require('express-validator')
 exports.validateProduct = [
     body('name').trim().notEmpty().withMessage('El nombre es requerido'),
     body('category').trim().notEmpty().withMessage('La categoría es requerida'),
-    body('price').isInt({ min: 0 }).withMessage('El precio debe ser un número positivo'),
-    body('stock').isInt({ min: 0 }).withMessage('El stock debe ser un número positivo'),
+    body('price')
+        .custom((value) => {
+            const num = Number(value)
+            return !isNaN(num) && num >= 0 && Number.isInteger(num)
+        })
+        .withMessage('El precio debe ser un número entero positivo'),
+    body('stock')
+        .custom((value) => {
+            const num = Number(value)
+            return !isNaN(num) && num >= 0 && Number.isInteger(num)
+        })
+        .withMessage('El stock debe ser un número entero positivo'),
     body('description').trim().notEmpty().withMessage('La descripción es requerida'),
     (req, res, next) => {
         const errors = validationResult(req)
@@ -18,7 +28,12 @@ exports.validateProduct = [
 
 // Middleware para validar stock
 exports.validateStock = [
-    body('stock').isInt({ min: 0 }).withMessage('El stock debe ser un número positivo'),
+    body('stock')
+        .custom((value) => {
+            const num = Number(value)
+            return !isNaN(num) && num >= 0 && Number.isInteger(num)
+        })
+        .withMessage('El stock debe ser un número entero positivo'),
     (req, res, next) => {
         const errors = validationResult(req)
         if (!errors.isEmpty()) {
