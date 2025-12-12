@@ -56,3 +56,16 @@ exports.validateOrder = [
         next()
     },
 ]
+
+// Middleware para validar categoría
+exports.validateCategory = [
+    body('name').trim().notEmpty().withMessage('El nombre de la categoría es requerido'),
+    body('description').optional().trim(),
+    (req, res, next) => {
+        const errors = validationResult(req)
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() })
+        }
+        next()
+    },
+]

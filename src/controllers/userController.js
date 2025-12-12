@@ -121,69 +121,40 @@ exports.createUser = async (req, res) => {
     } catch (error) {
         console.error('Error al crear usuario:', error)
         console.error('Error completo:', JSON.stringify(error, null, 2))
-        console.error('Código de error:', error.code)
-        console.error('Mensaje:', error.message)
         
         // Error de Prisma: tabla no existe
-        if (error.code === 'P2021' || 
-            error.message?.includes('does not exist') || 
-            error.message?.includes('Unknown table') ||
-            error.message?.includes('relation') && error.message?.includes('does not exist')) {
+        if (error.code === 'P2021' || error.message?.includes('does not exist') || error.message?.includes('Unknown table')) {
             return res.status(500).json({ 
-                error: 'La tabla de usuarios no existe en la base de datos.',
-                solution: 'Ejecuta en la terminal: npx prisma db push',
-                code: 'TABLE_NOT_EXISTS',
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+                error: 'La tabla de usuarios no existe en la base de datos. Ejecuta la migración: npx prisma migrate dev --name add_users_system',
+                code: 'TABLE_NOT_EXISTS'
             })
         }
         
         // Error de Prisma: campo no existe
-        if (error.code === 'P2022' || 
-            error.message?.includes("Unknown column") || 
-            error.message?.includes("doesn't exist") ||
-            error.message?.includes('column') && error.message?.includes('does not exist')) {
+        if (error.code === 'P2022' || error.message?.includes("Unknown column") || error.message?.includes("doesn't exist")) {
             return res.status(500).json({ 
-                error: 'La estructura de la tabla User no es correcta.',
-                solution: 'Ejecuta en la terminal: npx prisma db push',
-                code: 'SCHEMA_MISMATCH',
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+                error: 'La estructura de la tabla User no es correcta. Ejecuta: npx prisma db push',
+                code: 'SCHEMA_MISMATCH'
             })
         }
         
         // Error de Prisma: usuario duplicado
         if (error.code === 'P2002') {
-            return res.status(400).json({ 
-                error: 'Ya existe un usuario con este nombre',
-                code: 'DUPLICATE_USER'
-            })
+            return res.status(400).json({ error: 'Ya existe un usuario con este nombre' })
         }
         
         // Error de conexión a la base de datos
-        if (error.code === 'P1001' || 
-            error.message?.includes('Can\'t reach database') ||
-            error.message?.includes('Connection') ||
-            error.message?.includes('connect')) {
+        if (error.code === 'P1001' || error.message?.includes('Can\'t reach database')) {
             return res.status(500).json({ 
-                error: 'No se puede conectar a la base de datos.',
-                solution: 'Verifica que PostgreSQL esté corriendo y que DATABASE_URL esté correcto en .env',
-                code: 'DB_CONNECTION_ERROR',
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
-            })
-        }
-        
-        // Error de validación de Prisma
-        if (error.code === 'P2003') {
-            return res.status(400).json({ 
-                error: 'Error de validación en los datos',
-                code: 'VALIDATION_ERROR',
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+                error: 'No se puede conectar a la base de datos. Verifica DATABASE_URL',
+                code: 'DB_CONNECTION_ERROR'
             })
         }
         
         res.status(500).json({ 
             error: 'Error al crear usuario',
             message: error.message,
-            code: error.code || 'UNKNOWN_ERROR',
+            code: error.code,
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         })
     }
