@@ -12,34 +12,18 @@ const userRoutes = require('./routes/users')
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// Middleware CORS
+// Middleware CORS (solo orígenes permitidos, sin fallback)
 const allowedOrigins = [
+    process.env.FRONTEND_URL,
     'https://gcinsumos-page-front.onrender.com',
     'http://localhost:3000',
-    process.env.FRONTEND_URL
 ].filter(Boolean)
 
 app.use(cors({
-    origin: function (origin, callback) {
-        // Permitir requests sin origin (como mobile apps o curl)
-        if (!origin) return callback(null, true)
-        
-        // Verificar si el origen está en la lista permitida
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true)
-        } else {
-            // En producción, solo permitir orígenes conocidos
-            // En desarrollo, permitir localhost
-            if (process.env.NODE_ENV === 'development' || origin.includes('localhost')) {
-                callback(null, true)
-            } else {
-                callback(new Error('No permitido por CORS'))
-            }
-        }
-    },
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
